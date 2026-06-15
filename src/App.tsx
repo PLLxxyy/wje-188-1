@@ -4,22 +4,33 @@ import TopBar from './components/TopBar'
 import BottomTimeline from './components/BottomTimeline'
 import RightPanel from './components/RightPanel'
 import DeviceDetail from './components/DeviceDetail'
-import { MachineData, machines, timeSlots, Status } from './data/factoryData'
+import { MachineData, machines, timeSlots, Status, MAINTENANCE_THRESHOLD } from './data/factoryData'
 
 export default function App() {
   const [timelineIdx, setTimelineIdx] = useState(timeSlots.length - 1)
   const [hoveredMachine, setHoveredMachine] = useState<MachineData | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
   const [alarmDismissed, setAlarmDismissed] = useState(false)
+  const [maintenanceReset, setMaintenanceReset] = useState<Record<string, number>>({})
 
   const currentSlot = timeSlots[timelineIdx]
   const machineStates: Record<string, Status> = currentSlot?.machineStates ?? {}
 
-  // Check if there are alarm conditions
+  const needsMaintenance = useCallback(
+    (m: MachineData) => {
+      const effectiveHours = maintenanceReset[m.id] !== undefined ? maintenanceReset[m.id] : m.runHours
+      return effectiveHours >= MAINTENANCE_THRESHOLD
+    },
+    [maintenanceReset],
+  )
+
+  const handleCompleteMaintenance = useCallback((machineId: string) => {
+    setMaintenanceReset((prev) => ({ ...prev, [machineId]: 0 }))
+  }, [])
+
   const hasAlarms = Object.values(machineStates).some((s) => s === 'red')
   const alarmMachine = machines.find((m) => machineStates[m.id] === 'red')
 
-  // Reset alarm banner when timeline changes
   useEffect(() => {
     setAlarmDismissed(false)
   }, [timelineIdx])
@@ -32,26 +43,34 @@ export default function App() {
     [],
   )
 
+  const effectiveMachine = (m: MachineData): MachineData => {
+    if (maintenanceReset[m.id] !== undefined) {
+      return { ...m, runHours: maintenanceReset[m.id] }
+    }
+    return m
+  }
+
   return (
     <div className="app-container">
-      {/* Top summary bar */}
       <TopBar />
 
-      {/* 3D Scene */}
       <div className="canvas-wrapper">
-        <Scene machineStates={machineStates} onMachineHover={handleMachineHover} />
+        <Scene
+          machineStates={machineStates}
+          onMachineHover={handleMachineHover}
+          needsMaintenance={needsMaintenance}
+        />
       </div>
 
-      {/* Right station list */}
-      <RightPanel />
+      <RightPanel
+        needsMaintenance={needsMaintenance}
+        onCompleteMaintenance={handleCompleteMaintenance}
+      />
 
-      {/* Bottom timeline */}
       <BottomTimeline value={timelineIdx} onChange={setTimelineIdx} />
 
-      {/* Device hover detail */}
-      <DeviceDetail machine={hoveredMachine} position={tooltipPos} />
+      <DeviceDetail machine={hoveredMachine ? effectiveMachine(hoveredMachine) : null} position={tooltipPos} />
 
-      {/* Alarm banner */}
       {hasAlarms && !alarmDismissed && alarmMachine && (
         <div className="alarm-banner">
           <span className="alarm-banner-icon">&#x1F6A8;</span>

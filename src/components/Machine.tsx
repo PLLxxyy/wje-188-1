@@ -8,6 +8,7 @@ import StatusBubble from './StatusBubble'
 interface Props {
   data: MachineData
   statusOverride?: Status
+  isMaintenance?: boolean
   onHover: (machine: MachineData | null, screenPos?: { x: number; y: number }) => void
 }
 
@@ -27,7 +28,7 @@ const machineBodyColor: Record<string, string> = {
   packer: '#4a6a4a',
 }
 
-export default function Machine({ data, statusOverride, onHover }: Props) {
+export default function Machine({ data, statusOverride, isMaintenance, onHover }: Props) {
   const groupRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
   const status = statusOverride ?? data.status
@@ -36,6 +37,9 @@ export default function Machine({ data, statusOverride, onHover }: Props) {
   useFrame(({ clock }) => {
     if (groupRef.current && isAlarm) {
       const s = 1 + Math.sin(clock.elapsedTime * 6) * 0.015
+      groupRef.current.scale.set(s, s, s)
+    } else if (groupRef.current && isMaintenance) {
+      const s = 1 + Math.sin(clock.elapsedTime * 3) * 0.01
       groupRef.current.scale.set(s, s, s)
     } else if (groupRef.current) {
       groupRef.current.scale.set(1, 1, 1)
@@ -67,7 +71,7 @@ export default function Machine({ data, statusOverride, onHover }: Props) {
     [data, onHover],
   )
 
-  const bodyColor = machineBodyColor[data.type] ?? '#4a5a7a'
+  const bodyColor = isMaintenance ? '#8a6a20' : machineBodyColor[data.type] ?? '#4a5a7a'
 
   function renderShape() {
     switch (data.type) {
@@ -196,11 +200,11 @@ export default function Machine({ data, statusOverride, onHover }: Props) {
       {/* Status indicator ring at base */}
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.6, 0.75, 24]} />
-        <meshBasicMaterial color={statusColor[status]} transparent opacity={0.4} />
+        <meshBasicMaterial color={isMaintenance ? '#ff9800' : statusColor[status]} transparent opacity={0.4} />
       </mesh>
 
       {/* Status bubble above */}
-      <StatusBubble status={status} position={[0, 2.0, 0]} />
+      <StatusBubble status={status} isMaintenance={isMaintenance} position={[0, 2.0, 0]} />
 
       {/* Billboard label */}
       <Billboard position={[0, 2.5, 0]} follow lockX={false} lockY={false} lockZ={false}>
@@ -219,6 +223,11 @@ export default function Machine({ data, statusOverride, onHover }: Props) {
       {/* Alarm glow for red status */}
       {isAlarm && (
         <pointLight position={[0, 1.2, 0]} color="#ef5350" intensity={3} distance={4} />
+      )}
+
+      {/* Maintenance glow */}
+      {isMaintenance && !isAlarm && (
+        <pointLight position={[0, 1.2, 0]} color="#ff9800" intensity={2} distance={4} />
       )}
     </group>
   )

@@ -9,6 +9,7 @@ import { MachineData, Status } from '../data/factoryData'
 interface Props {
   machineStates: Record<string, Status>
   onMachineHover: (machine: MachineData | null, screenPos?: { x: number; y: number }) => void
+  needsMaintenance: (m: MachineData) => boolean
 }
 
 const conveyorDefs: { pos: [number, number, number]; length: number }[] = [
@@ -23,7 +24,7 @@ const conveyorDefs: { pos: [number, number, number]; length: number }[] = [
 // Raw machine list (same order as factoryData)
 import { machines } from '../data/factoryData'
 
-export default function Scene({ machineStates, onMachineHover }: Props) {
+export default function Scene({ machineStates, onMachineHover, needsMaintenance }: Props) {
   return (
     <Canvas
       camera={{ position: [0, 8, 14], fov: 50, near: 0.1, far: 200 }}
@@ -79,6 +80,7 @@ export default function Scene({ machineStates, onMachineHover }: Props) {
             key={m.id}
             data={m}
             statusOverride={machineStates[m.id] ?? m.status}
+            isMaintenance={needsMaintenance(m)}
             onHover={onMachineHover}
           />
         ))}

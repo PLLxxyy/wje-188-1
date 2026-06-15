@@ -1,6 +1,8 @@
 // ── Types ──────────────────────────────────────────────────────────────────
 export type Status = 'green' | 'yellow' | 'red'
 
+export const MAINTENANCE_THRESHOLD = 8
+
 export interface MachineData {
   id: string
   name: string
@@ -36,7 +38,7 @@ export const machines: MachineData[] = [
     name: '上料传送带',
     type: 'conveyor',
     position: [-8, 0, 0],
-    runHours: 6.5,
+    runHours: 8.2,
     capacity: 1200,
     currentOutput: 1180,
     status: 'green',
@@ -56,7 +58,7 @@ export const machines: MachineData[] = [
     name: '冲压机-01',
     type: 'press',
     position: [-1.5, 0.8, 0],
-    runHours: 6.2,
+    runHours: 8.5,
     capacity: 480,
     currentOutput: 410,
     status: 'yellow',
@@ -98,7 +100,7 @@ export const machines: MachineData[] = [
     name: '成品包装机',
     type: 'packer',
     position: [10, 0.5, 0],
-    runHours: 6.0,
+    runHours: 9.1,
     capacity: 600,
     currentOutput: 540,
     status: 'green',

@@ -5,6 +5,7 @@ import { Status } from '../data/factoryData'
 
 interface Props {
   status: Status
+  isMaintenance?: boolean
   position: [number, number, number]
 }
 
@@ -12,15 +13,17 @@ const colorMap: Record<string, string> = {
   green: '#4caf50',
   yellow: '#ffb74d',
   red: '#ef5350',
+  maintenance: '#ff9800',
 }
 
 const emissiveMap: Record<string, string> = {
   green: '#2e7d32',
   yellow: '#f57f17',
   red: '#c62828',
+  maintenance: '#e65100',
 }
 
-export default function StatusBubble({ status, position }: Props) {
+export default function StatusBubble({ status, isMaintenance, position }: Props) {
   const ref = useRef<THREE.Mesh>(null)
   const baseY = position[1]
 
@@ -32,13 +35,15 @@ export default function StatusBubble({ status, position }: Props) {
     }
   })
 
+  const bubbleKey = isMaintenance ? 'maintenance' : status
+
   return (
     <mesh ref={ref} position={position}>
       <sphereGeometry args={[0.22, 16, 16]} />
       <meshStandardMaterial
-        color={colorMap[status]}
-        emissive={emissiveMap[status]}
-        emissiveIntensity={status === 'red' ? 1.2 : 0.6}
+        color={colorMap[bubbleKey]}
+        emissive={emissiveMap[bubbleKey]}
+        emissiveIntensity={isMaintenance ? 1.0 : status === 'red' ? 1.2 : 0.6}
         transparent
         opacity={0.85}
         roughness={0.2}
