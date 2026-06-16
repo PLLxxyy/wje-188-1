@@ -19,7 +19,7 @@ export default function App() {
   const needsMaintenance = useCallback(
     (m: MachineData) => {
       const effectiveHours = maintenanceReset[m.id] !== undefined ? maintenanceReset[m.id] : m.runHours
-      return effectiveHours >= MAINTENANCE_THRESHOLD
+      return effectiveHours > MAINTENANCE_THRESHOLD
     },
     [maintenanceReset],
   )
